@@ -21,7 +21,7 @@ class Tetris:
                        1: Timer(25)}
 
         self.map = self.create_map()
-
+        print(len(self.map[0])-1)
         self.I = I
         self.O = O
         self.L = L
@@ -51,17 +51,17 @@ class Tetris:
                 x = j * self.boxSize
                 y = i * self.boxSize
                 if self.map[i][j] == 0:
-                    pygame.draw.rect(self.display, (24, 24, 24), ((x, y), (self.boxSize, self.boxSize)), width= 1)
+                    pygame.draw.rect(self.display, (24, 24, 24), ((x, y), (self.boxSize, self.boxSize)), width= 4)
                 if self.map[i][j] == 1:
-                    pygame.draw.rect(self.display, self.I().color, ((x, y), (self.boxSize, self.boxSize)), width= 1)
+                    pygame.draw.rect(self.display, self.I().color, ((x, y), (self.boxSize, self.boxSize)), width= 4)
                 if self.map[i][j] == 2:
-                     pygame.draw.rect(self.display, self.O().color, ((x, y), (self.boxSize, self.boxSize)), width= 1)
+                     pygame.draw.rect(self.display, self.O().color, ((x, y), (self.boxSize, self.boxSize)), width= 4)
                 if self.map[i][j] == 3:
-                     pygame.draw.rect(self.display, self.L().color, ((x, y), (self.boxSize, self.boxSize)), width= 1)
+                     pygame.draw.rect(self.display, self.L().color, ((x, y), (self.boxSize, self.boxSize)), width= 4)
 
     def spawn_shape(self):
-        # randomPiece = random.randint(0, 1)
-        randomPiece = 2
+        randomPiece = random.randint(0, 2)
+        # randomPiece = 0
         if randomPiece == 0:
             piece = self.I()
         elif randomPiece == 1:
@@ -96,10 +96,10 @@ class Tetris:
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_a:
                         self.moveDirection = -1
-                        print("left")
+                        # print("left")
                     elif event.key == pygame.K_d:
                         self.moveDirection = 1
-                        print("right")
+                        # print("right")
 
                     if event.key == pygame.K_w:
                         self.rotateBool = True
@@ -118,7 +118,7 @@ class Tetris:
                 self.timers[timer].update()
             
             
-
+            # Move the shapes down. Spawns piece once the current falling piece has landed
             if not self.timers[0].running:
                 for piece in self.shapes:
                     if not piece.landed:
@@ -130,21 +130,30 @@ class Tetris:
                 # print(self.moveDirection)
                 self.update_map()
 
+            # Allows for moving side to side.
             if not self.timers[1].running:
                 # print("Movding")
                 pieceToMove = self.shapes[-1]
-                pieceToMove.move_side(self.map, self.moveDirection)
-                if not pieceToMove.landed:
-                    self.timers[1].start()
+                if not pieceToMove.checkCollisionSides(self.map, self.moveDirection):
+                    pieceToMove.move_side(self.map, self.moveDirection)
+                
+                    if not pieceToMove.landed:
+                        self.timers[1].start()
                 
                 self.moveDirection = 0
 
                 if self.rotateBool:
+                    pieceToMove.rotation += 1
                     pieceToMove.rotate(self.map)
+                    self.update_map()
+                    if pieceToMove.rotateCheck(self.map):
+                        self.update_map()
+
                     self.rotateBool = False
 
                 self.update_map()
             
+            # Drops the shape with more speed.
             if self.drop:
                 pieceToMove = self.shapes[-1]
                 pieceToMove.move_side(self.map, self.moveDirection)
