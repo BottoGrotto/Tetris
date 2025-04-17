@@ -28,9 +28,11 @@ class Pieces:
         for quard in self.shape:
             row = self.pos[0] + quard[0]
             col = self.pos[1] + quard[1] + moveDirection
-
+            # if col < 0:
+            #     print("overflow")
+            #     return True
             if col >= 0 and col <= len(map[0])-1:
-                print(col)
+                print(col, len(map[0])-1) 
                 sideState = map[row][col]
 
                 hittingItSelf = self.checkPos(row, col)

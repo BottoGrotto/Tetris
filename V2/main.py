@@ -77,7 +77,12 @@ class Tetris:
         self.map = self.create_map()
         for piece in self.shapes:
             for quard in piece.shape:
+                # try:
                 self.map[piece.pos[0] + quard[0]][piece.pos[1] + quard[1]] = piece.id
+                # except:
+                #     print("BROKEN")
+                #     print(piece.pos[0] + quard[0], piece.pos[1] + quard[1])
+                #     self.map[piece.pos[0] + quard[0]][piece.pos[1] + quard[1]] = piece.id
 
 
 
