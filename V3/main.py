@@ -14,7 +14,13 @@ class Game:
         self.score = 0
         self.style = 4
 
+        self.screen_state = 0
+        self.game_started = False
+        self.paused = False
+
         self.line_clear_sound = pygame.mixer.Sound("lineclear.mp3")
+        self.music = pygame.mixer.Sound("Tetris.mp3")
+        self.music.set_volume(0.5)
 
         self.spawner = ShapeSpawner()
 
@@ -22,6 +28,14 @@ class Game:
         self.shapes[-1].falling_speed.start(loop=True)
                    
         self.font = pygame.font.SysFont('Comic Sans MS', 30)
+
+    def check_fail(self):
+        if len(self.shapes) >= 1:
+            if not self.shapes[0].falling:
+                if self.shapes[0].pos.y == 0:
+                    return True
+        return False
+
         
     def check_line_and_clear(self):
         clear_lines = []
@@ -91,45 +105,78 @@ class Game:
         for i in range(len(self.grid)):
             pygame.draw.line(self.screen, (255, 255, 255), (x, 0), (x, self.size[1]), 1)
             x += BOX_SIZE
+    def draw_text(self, pos, text, size, color):
+        font = pygame.font.SysFont('Comic Sans MS', size)
+        text_surface = font.render(f'{text}', True, color)
+        self.screen.blit(text_surface, pos)
 
     def draw_score(self):
-        text_surface = self.font.render(f'{self.score}', True, (255, 255, 255))
-        self.screen.blit(text_surface, (10,0))
+        self.draw_text((10, 0), self.score, 30, (255, 255, 255))
 
     def run(self):
         while True:
             pygame.display.set_caption(f"Tetris  FPS: {int(self.clock.get_fps())}")
             self.screen.fill((0, 0, 0))
             self.clock.tick(60)
-            self.draw_boxes()
             # self.draw_grid()
-            self.clear_grid()
-            self.check_line_and_clear()
-            self.draw_score()
+            if self.screen_state == 0:
+                self.draw_text((self.size[0]/8, 0), "Tetris", 100, (255, 0, 0))
 
+            if self.screen_state == 1 or self.screen_state == 2:
+                if not self.game_started and self.screen_state == 1:
+                    self.music.play(loops=100)
+                    self.game_started = True
 
-            if len(self.shapes) == 0:
-                self.shapes.append(self.spawner.random_shape())
-                self.shapes[-1].falling_speed.start(loop=True)
+                self.draw_boxes()
+                self.clear_grid()
                 
-            for shape in self.shapes:
-                shape.update(self.grid)
-                if not shape.falling:
-                    self.shapes.remove(shape)
+                self.check_line_and_clear()
+                self.draw_score()
+
+                if self.screen_state == 1:
+                    if len(self.shapes) == 0:
+                        self.shapes.append(self.spawner.random_shape())
+                        self.shapes[-1].falling_speed.start(loop=True)
+                        
+                    if not self.paused:
+                        for shape in self.shapes:
+                            shape.update(self.grid)
+                            if self.check_fail():
+                                self.screen_state = 2
+                                self.game_started = False
+                                self.shapes = []
+                                # self.grid = self.make_grid()
+                                self.music.stop()
+                            elif not shape.falling:
+                                self.shapes.remove(shape)
+                    else:
+                        for shape in self.shapes:
+                            shape.draw(self.grid)
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
                 if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_i:
+                    if event.key == pygame.K_ESCAPE:
+                        self.paused = not self.paused
+                    if event.key == pygame.K_SPACE:
+                        if self.screen_state == 2:
+                            self.screen_state = 0
+                        elif self.screen_state == 0:
+                            self.screen_state = 1
+                            self.grid = self.make_grid()
+                            self.score = 0
+
+                    if event.key == pygame.K_i and self.screen_state == 1:
                         if self.style > 4:
                             self.style = 2
                         else:
                             self.style += 2
                     
+                    
                 if event.type == pygame.KEYUP:
-                    if event.key == pygame.K_UP or event.key == pygame.K_w:
+                    if (event.key == pygame.K_UP or event.key == pygame.K_w) and self.screen_state == 1:
                         if len(self.shapes) >= 1:
                             self.shapes[0].can_rotate = True
 

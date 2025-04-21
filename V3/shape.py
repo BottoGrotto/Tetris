@@ -95,6 +95,13 @@ class Shape:
     def remove_from_shapes(self, shapes):
         shapes.remove(self)
         return shapes
+    
+    def draw(self, grid):
+        for pos in self.shape:
+            x = int(self.pos.x + pos.x)
+            y = int(self.pos.y + pos.y)
+            grid[y][x] = self.id
+        return grid
 
     def update(self, grid):
         self.input(grid)
@@ -104,11 +111,7 @@ class Shape:
             else:
                 self.pos.y += 1
         
-        for pos in self.shape:
-            x = int(self.pos.x + pos.x)
-            y = int(self.pos.y + pos.y)
-            grid[y][x] = self.id
-        return grid
+        return self.draw(grid)
                 
 
 
